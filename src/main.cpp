@@ -11,24 +11,22 @@
 /*******original********
 #include "BLEDevice.h"
 ***********************/
-#include "NimBLEDevice.h"
-
+#include <NimBLEDevice.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
 
 // Update these with values suitable for your network.
 
-const char* ssid = "the robot network";
-const char* password = "isaacasimov";
-const char* mqtt_server = "robotmqtt";
+const char *ssid = "the robot network";
+const char *password = "isaacasimov";
+const char *mqtt_server = "robotmqtt";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-//unsigned long lastMsg = 0;
+// unsigned long lastMsg = 0;
 //#define MSG_BUFFER_SIZE (50)
-//char msg[MSG_BUFFER_SIZE];
-//int value = 0;
-
+// char msg[MSG_BUFFER_SIZE];
+// int value = 0;
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID("4dc591b0-857c-41de-b5f1-15abda665b0c");
@@ -38,66 +36,85 @@ static BLEUUID charUUID("02b8cbcc-0e25-4bda-8790-a15f53e6010f");
 static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
-static BLERemoteCharacteristic* pRemoteCharacteristic;
-static BLEAdvertisedDevice* myDevice;
+static BLERemoteCharacteristic *pRemoteCharacteristic;
+static BLEAdvertisedDevice *myDevice;
+
+static uint8_t motorAdrivingForward = 1;
+static uint8_t motorBdrivingForward = 1;
+static uint8_t motorCdrivingForward = 1;
+static uint8_t motorDdrivingForward = 1;
+
+static uint8_t motorAspeed = 0;
+static uint8_t motorBspeed = 0;
+static uint8_t motorCspeed = 0;
+static uint8_t motorDspeed = 0;
 
 static void notifyCallback(
-  BLERemoteCharacteristic* pBLERemoteCharacteristic,
-  uint8_t* pData,
-  size_t length,
-  bool isNotify) {
+    BLERemoteCharacteristic *pBLERemoteCharacteristic,
+    uint8_t *pData,
+    size_t length,
+    bool isNotify)
+{
   Serial.print("Notify callback for characteristic ");
   Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
   Serial.print(" of data length ");
   Serial.println(length);
   Serial.print("data: ");
-  Serial.println((char*)pData);
+  Serial.println((char *)pData);
 }
 
 /**  None of these are required as they will be handled by the library with defaults. **
  **                       Remove as you see fit for your needs                        */
-class MyClientCallback : public BLEClientCallbacks {
-  void onConnect(BLEClient* pclient) {
+class MyClientCallback : public BLEClientCallbacks
+{
+  void onConnect(BLEClient *pclient)
+  {
   }
 
-  void onDisconnect(BLEClient* pclient) {
-    connected = false;
+  void onDisconnect(BLEClient *pclient)
+  {
+    // connected = false;
     Serial.println("onDisconnect");
   }
   /***************** New - Security handled here ********************
-****** Note: these are the same return values as defaults ********/
-  uint32_t onPassKeyRequest() {
-    Serial.println("Client PassKeyRequest");
-    return 123456;
-  }
-  bool onConfirmPIN(uint32_t pass_key) {
-    Serial.print("The passkey YES/NO number: ");
-    Serial.println(pass_key);
-    return true;
-  }
+   ****** Note: these are the same return values as defaults ********/
+  // uint32_t onPassKeyRequest()
+  // {
+  //   Serial.println("Client PassKeyRequest");
+  //   return 123456;
+  // }
+  // bool onConfirmPIN(uint32_t pass_key)
+  // {
+  //   Serial.print("The passkey YES/NO number: ");
+  //   Serial.println(pass_key);
+  //   return true;
+  // }
 
-  void onAuthenticationComplete(ble_gap_conn_desc desc) {
-    Serial.println("Starting BLE work!");
-  }
+  // void onAuthenticationComplete(ble_gap_conn_desc desc)
+  // {
+  //   Serial.println("Starting BLE work!");
+  // }
   /*******************************************************************/
 };
 
-bool connectToServer() {
+bool connectToServer()
+{
   Serial.print("Forming a connection to ");
   Serial.println(myDevice->getAddress().toString().c_str());
 
-  BLEClient* pClient = BLEDevice::createClient();
+  BLEClient *pClient = BLEDevice::createClient();
   Serial.println(" - Created client");
 
   pClient->setClientCallbacks(new MyClientCallback());
 
   // Connect to the remove BLE Server.
-  pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
+  pClient->connect(myDevice); // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
   Serial.println(" - Connected to server");
 
   // Obtain a reference to the service we are after in the remote BLE server.
-  BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
-  if (pRemoteService == nullptr) {
+  BLERemoteService *pRemoteService = pClient->getService(serviceUUID);
+  if (pRemoteService == nullptr)
+  {
     Serial.print("Failed to find our service UUID: ");
     Serial.println(serviceUUID.toString().c_str());
     pClient->disconnect();
@@ -105,10 +122,10 @@ bool connectToServer() {
   }
   Serial.println(" - Found our service");
 
-
   // Obtain a reference to the characteristic in the service of the remote BLE server.
   pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
-  if (pRemoteCharacteristic == nullptr) {
+  if (pRemoteCharacteristic == nullptr)
+  {
     Serial.print("Failed to find our characteristic UUID: ");
     Serial.println(charUUID.toString().c_str());
     pClient->disconnect();
@@ -117,7 +134,8 @@ bool connectToServer() {
   Serial.println(" - Found our characteristic");
 
   // Read the value of the characteristic.
-  if (pRemoteCharacteristic->canRead()) {
+  if (pRemoteCharacteristic->canRead())
+  {
     std::string value = pRemoteCharacteristic->readValue();
     Serial.print("The characteristic value was: ");
     Serial.println(value.c_str());
@@ -133,14 +151,16 @@ bool connectToServer() {
 /**
  * Scan for BLE servers and find the first one that advertises the service we are looking for.
  */
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
+class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
+{
   /**
    * Called for each advertising BLE server.
    */
 
   /*** Only a reference to the advertised device is passed now
   void onResult(BLEAdvertisedDevice advertisedDevice) { **/
-  void onResult(BLEAdvertisedDevice* advertisedDevice) {
+  void onResult(BLEAdvertisedDevice *advertisedDevice)
+  {
     Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice->toString().c_str());
 
@@ -152,8 +172,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
 
     //  auto n = advertisedDevice->getName();
 
-    if (strcmp(advertisedDevice->getName().c_str(), "adalovelace") == 0) {
-
+    if (strcmp(advertisedDevice->getName().c_str(), "adalovelace") == 0)
+    {
       BLEDevice::getScan()->stop();
       /*******************************************************************
       myDevice = new BLEAdvertisedDevice(advertisedDevice);
@@ -162,103 +182,105 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       doConnect = true;
       doScan = true;
 
-    }  // Found our server
-  }    // onResult
-};     // MyAdvertisedDeviceCallbacks
+    } // Found our server
+  }   // onResult
+};    // MyAdvertisedDeviceCallbacks
 
-
-void setup() {
-  setupMQTT();
-  setupBLE();
-}
-
-void setupBLE() {
-
-  Serial.begin(115200);
+void setupBLE()
+{
   Serial.println("Starting Arduino BLE Client application...");
   BLEDevice::init("");
 
   // Retrieve a Scanner and set the callback we want to use to be informed when we
   // have detected a new device.  Specify that we want active scanning and start the
   // scan to run for 5 seconds.
-  BLEScan* pBLEScan = BLEDevice::getScan();
+  BLEScan *pBLEScan = BLEDevice::getScan();
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setInterval(1349);
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
   pBLEScan->start(5, false);
-}  // End of setup.
+} // End of setup.
 
+void sendBLE()
+{
+  // If we are connected to a peer BLE Server, update the characteristic each time we are reached
+  // with the current time since boot.
+  if (connected)
+  {
 
-// This is the Arduino main loop function.
-void loop() {
-  loopBLE();
-  loopMQTT();
+    // Construct drive command.
+    uint8_t byteCmd[13] = {
+        1,
+        1,
+        true,
+        motorAspeed,
+        2,
+        true,
+        motorBspeed,
+        3,
+        true,
+        motorCspeed,
+        4,
+        true,
+        motorDspeed};
 
-  delay(10);  // Delay to keep processor happy?
+    // Command sent 1,1,1,0,2,1,0,3,1,0,4,1,0,
+
+    //Serial.print("motorDspeed: ");
+    //Serial.println(motorDspeed);
+
+    // Serial.print("Command sent");
+    // for (int i = 0; i < 13; i++)
+    // {
+    //   Serial.print(byteCmd[i]);
+    //   Serial.print(",");
+    // }
+    // Serial.println();
+
+    // Send drive command.;
+    pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false);
+  }
+  // else
+  // {
+  //   Serial.println("Restart scan");
+  //   BLEDevice::getScan()->start(0);
+  // }
+  // } else if (doScan) {
+  //   BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
+  // }
 }
 
-void loopBLE() {
-
+void loopBLE()
+{
   // If the flag "doConnect" is true then we have scanned for and found the desired
   // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
   // connected we set the connected flag to be true.
-  if (doConnect == true) {
-    if (connectToServer()) {
+  if (doConnect == true)
+  {
+    if (connectToServer())
+    {
       Serial.println("We are now connected to the BLE Server.");
-    } else {
+    }
+    else
+    {
       Serial.println("We have failed to connect to the server; there is nothin more we will do.");
     }
     doConnect = false;
   }
 
-
-}  // End of loop
-
-
-
-void sendBLE(){
-
-  // If we are connected to a peer BLE Server, update the characteristic each time we are reached
-  // with the current time since boot.
-  if (connected) {
-
-    uint8_t Arnd = random(0, 255);
-    uint8_t Brnd = random(0, 255);
-    uint8_t Crnd = random(0, 255);
-    uint8_t Drnd = random(0, 255);
-
-    // Construct drive command.
-    uint8_t byteCmd[13] = {
-      1,
-      1,
-      true,
-      Arnd,
-      2,
-      true,
-      Brnd,
-      3,
-      true,
-      Crnd,
-      4,
-      true,
-      Drnd
-    };
-
-    // Send drive command.;
-    pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false);
-  } else {
-    Serial.println("Restart scan");
+  // will this work
+  if (connected == false)
+  {
+    Serial.println("Restart scan - loopBLE");
     BLEDevice::getScan()->start(0);
   }
-  // } else if (doScan) {
-  //   BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
-  // }
+  else
+  {
+    sendBLE();
+  }
 
-}
-
-
-
+} // End of loop
 
 /*
  Basic ESP8266 MQTT example
@@ -280,11 +302,8 @@ void sendBLE(){
   - Select your ESP8266 in "Tools -> Board"
 */
 
-
-
-void setup_wifi() {
-
-  delay(10);
+void setup_wifi()
+{
   // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
@@ -293,7 +312,8 @@ void setup_wifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
@@ -306,42 +326,70 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
+void callback(char *topic, byte *payload, unsigned int length)
+{
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
 
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);  // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-  }
+  
+  // for (int i = 0; i < length; i++)
+  // {
+  //   Serial.print((char)payload[i]);
+  // }
+  // Serial.println();
 
-   sendBLE();
+  String s = String((char *)payload);
+  int i = s.toInt();
+
+  Serial.println(i);
+
+uint8_t y = s.toInt();
+
+    Serial.println(y);
+
+  // // Switch on the LED if an 1 was received as first character
+  // if ((char)payload[0] == '1')
+  // {
+  //   digitalWrite(BUILTIN_LED, LOW); // Turn the LED on (Note that LOW is the voltage level
+  //   // but actually the LED is on; this is because
+  //   // it is active low on the ESP-01)
+  // }
+  // else
+  // {
+  //   digitalWrite(BUILTIN_LED, HIGH); // Turn the LED off by making the voltage HIGH
+  // }
+
+  motorAspeed = s.toInt();
+  motorBspeed = s.toInt();
+  motorCspeed = s.toInt();
+  motorDspeed = s.toInt();
 }
 
-void reconnect() {
+void reconnect()
+{
   // Loop until we're reconnected
-  while (!client.connected()) {
+  while (!client.connected())
+  {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESP8266Client-";
+    String clientId = "SBrickController-";
     clientId += String(random(0xffff), HEX);
+
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect(clientId.c_str()))
+    {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      client.publish("/SBrick/adalovelace/", "hello world");
       // ... and resubscribe
-      client.subscribe("inTopic");
-    } else {
+      client.subscribe("/SBrick/adalovelace/motor/1");
+      client.subscribe("/SBrick/adalovelace/motor/2");
+      client.subscribe("/SBrick/adalovelace/motor/3");
+      client.subscribe("/SBrick/adalovelace/motor/4");
+    }
+    else
+    {
       Serial.print("failed, rc=");
       Serial.print(client.state());
       Serial.println(" try again in 5 seconds");
@@ -351,17 +399,16 @@ void reconnect() {
   }
 }
 
-void setupMQTT() {
-  pinMode(BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
-  Serial.begin(115200);
-  setup_wifi();
+void setupMQTT()
+{
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 }
 
-void loopMQTT() {
-
-  if (!client.connected()) {
+void loopMQTT()
+{
+  if (!client.connected())
+  {
     reconnect();
   }
   client.loop();
@@ -375,4 +422,26 @@ void loopMQTT() {
   //   Serial.println(msg);
   //   client.publish("outTopic", msg);
   // }
+}
+
+void setup()
+{
+  // pinMode(BUILTIN_LED, OUTPUT); // Initialize the BUILTIN_LED pin as an output
+
+  Serial.begin(115200);
+
+  delay(10);
+
+  setup_wifi();
+  setupMQTT();
+  setupBLE();
+}
+
+// This is the Arduino main loop function.
+void loop()
+{
+  loopBLE();
+  loopMQTT();
+
+  delay(50); // Delay to keep processor happy?
 }

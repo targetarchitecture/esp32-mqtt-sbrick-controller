@@ -10,8 +10,8 @@ static BLEUUID charUUID("02b8cbcc-0e25-4bda-8790-a15f53e6010f");
 static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
-static BLERemoteCharacteristic *pRemoteCharacteristic;
-static BLEAdvertisedDevice *myDevice;
+static BLERemoteCharacteristic *pRemoteCharacteristic[6];
+static BLEAdvertisedDevice *myDevice[6];
 
 extern uint8_t motorAdrivingForward;
 extern uint8_t motorBdrivingForward;

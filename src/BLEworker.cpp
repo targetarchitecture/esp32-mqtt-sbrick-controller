@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "BLEworker.h"
 
-static void notifyCallback(
+ void notifyCallback(
     BLERemoteCharacteristic *pBLERemoteCharacteristic,
     uint8_t *pData,
     size_t length,
@@ -31,7 +31,7 @@ class MyClientCallback : public BLEClientCallbacks
 bool connectToServer()
 {
   Serial.print("Forming a connection to ");
-  Serial.println(myDevice->getAddress().toString().c_str());
+  Serial.println(myDevice[1]->getAddress().toString().c_str());
 
   BLEClient *pClient = BLEDevice::createClient();
   Serial.println(" - Created client");
@@ -54,7 +54,7 @@ bool connectToServer()
   Serial.println(" - Found our service");
 
   // Obtain a reference to the characteristic in the service of the remote BLE server.
-  pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
+  pRemoteCharacteristic[1] = pRemoteService->getCharacteristic(charUUID);
   if (pRemoteCharacteristic == nullptr)
   {
     Serial.print("Failed to find our characteristic UUID: ");
@@ -65,15 +65,15 @@ bool connectToServer()
   Serial.println(" - Found our characteristic");
 
   // Read the value of the characteristic.
-  if (pRemoteCharacteristic->canRead())
+  if (pRemoteCharacteristic[1]->canRead())
   {
-    std::string value = pRemoteCharacteristic->readValue();
+    std::string value = pRemoteCharacteristic[1]->readValue();
     Serial.print("The characteristic value was: ");
     Serial.println(value.c_str());
   }
 
-  if (pRemoteCharacteristic->canNotify())
-    pRemoteCharacteristic->subscribe(true,notifyCallback);
+  if (pRemoteCharacteristic[1]->canNotify())
+    pRemoteCharacteristic[1]->subscribe(true,notifyCallback);
 
   connected = true;
   return true;
@@ -103,17 +103,32 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 
     //  auto n = advertisedDevice->getName();
 
-    if (strcmp(advertisedDevice->getName().c_str(), "adalovelace") == 0)
+//     if (strcmp(advertisedDevice->getName().c_str(), "adalovelace") == 0)
+//     //BBC micro:bit [tegat]
+//     {
+//       BLEDevice::getScan()->stop();
+//       /*******************************************************************
+//       myDevice = new BLEAdvertisedDevice(advertisedDevice);
+// *******************************************************************/
+//       myDevice[1] = advertisedDevice; /** Just save the reference now, no need to copy the object */
+//       doConnect = true;
+//       doScan = true;
+
+//     } // Found our server
+
+    if (strcmp(advertisedDevice->getName().c_str(), "BBC micro:bit [tegat]") == 0)
     {
       BLEDevice::getScan()->stop();
       /*******************************************************************
       myDevice = new BLEAdvertisedDevice(advertisedDevice);
 *******************************************************************/
-      myDevice = advertisedDevice; /** Just save the reference now, no need to copy the object */
+      myDevice[2] = advertisedDevice; /** Just save the reference now, no need to copy the object */
       doConnect = true;
       doScan = true;
 
     } // Found our server
+
+
   }   // onResult
 };    // MyAdvertisedDeviceCallbacks
 
@@ -169,7 +184,7 @@ void sendBLE()
     // Serial.println();
 
     // Send drive command.;
-    pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false);
+    pRemoteCharacteristic[1]->writeValue(byteCmd, sizeof(byteCmd), false);
   }
   // else
   // {

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "BLEworker.h"
 
- void notifyCallback(
+void notifyCallback(
     BLERemoteCharacteristic *pBLERemoteCharacteristic,
     uint8_t *pData,
     size_t length,
@@ -30,8 +30,12 @@ class MyClientCallback : public BLEClientCallbacks
 
 bool connectToServer()
 {
+  String msg = "Connecting to ";
+  msg.concat(myDevice->getAddress().toString().c_str());
+  sendMessage(msg);
+
   Serial.print("Forming a connection to ");
-  Serial.println(myDevice[1]->getAddress().toString().c_str());
+  Serial.println(myDevice->getAddress().toString().c_str());
 
   BLEClient *pClient = BLEDevice::createClient();
   Serial.println(" - Created client");
@@ -39,13 +43,21 @@ bool connectToServer()
   pClient->setClientCallbacks(new MyClientCallback());
 
   // Connect to the remove BLE Server.
-  pClient->connect(myDevice); 
+  pClient->connect(myDevice);
   Serial.println(" - Connected to server");
+
+  msg = "Connected to ";
+  msg.concat(myDevice->getAddress().toString().c_str());
+  sendMessage(msg);
 
   // Obtain a reference to the service we are after in the remote BLE server.
   BLERemoteService *pRemoteService = pClient->getService(serviceUUID);
   if (pRemoteService == nullptr)
   {
+    msg = "Failed to find our service UUID: ";
+    msg.concat(serviceUUID.toString().c_str());
+    sendMessage(msg);
+
     Serial.print("Failed to find our service UUID: ");
     Serial.println(serviceUUID.toString().c_str());
     pClient->disconnect();
@@ -54,9 +66,13 @@ bool connectToServer()
   Serial.println(" - Found our service");
 
   // Obtain a reference to the characteristic in the service of the remote BLE server.
-  pRemoteCharacteristic[1] = pRemoteService->getCharacteristic(charUUID);
+  pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
   if (pRemoteCharacteristic == nullptr)
   {
+    msg = "Failed to find our characteristic UUID: ";
+    msg.concat(charUUID.toString().c_str());
+    sendMessage(msg);
+
     Serial.print("Failed to find our characteristic UUID: ");
     Serial.println(charUUID.toString().c_str());
     pClient->disconnect();
@@ -65,15 +81,15 @@ bool connectToServer()
   Serial.println(" - Found our characteristic");
 
   // Read the value of the characteristic.
-  if (pRemoteCharacteristic[1]->canRead())
+  if (pRemoteCharacteristic->canRead())
   {
-    std::string value = pRemoteCharacteristic[1]->readValue();
+    std::string value = pRemoteCharacteristic->readValue();
     Serial.print("The characteristic value was: ");
     Serial.println(value.c_str());
   }
 
-  if (pRemoteCharacteristic[1]->canNotify())
-    pRemoteCharacteristic[1]->subscribe(true,notifyCallback);
+  if (pRemoteCharacteristic->canNotify())
+    pRemoteCharacteristic->subscribe(true, notifyCallback);
 
   connected = true;
   return true;
@@ -95,6 +111,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice->toString().c_str());
 
+    String msg = "BLE Advertised Device found: ";
+    msg.concat(advertisedDevice->toString().c_str());
+    sendMessage(msg);
+
     // We have found a device, let us now see if it contains the service we are looking for.
     /********************************************************************************
     if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID)) {
@@ -103,18 +123,18 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 
     //  auto n = advertisedDevice->getName();
 
-//     if (strcmp(advertisedDevice->getName().c_str(), "adalovelace") == 0)
-//     //BBC micro:bit [tegat]
-//     {
-//       BLEDevice::getScan()->stop();
-//       /*******************************************************************
-//       myDevice = new BLEAdvertisedDevice(advertisedDevice);
-// *******************************************************************/
-//       myDevice[1] = advertisedDevice; /** Just save the reference now, no need to copy the object */
-//       doConnect = true;
-//       doScan = true;
+    //     if (strcmp(advertisedDevice->getName().c_str(), "adalovelace") == 0)
+    //     //BBC micro:bit [tegat]
+    //     {
+    //       BLEDevice::getScan()->stop();
+    //       /*******************************************************************
+    //       myDevice = new BLEAdvertisedDevice(advertisedDevice);
+    // *******************************************************************/
+    //       myDevice[1] = advertisedDevice; /** Just save the reference now, no need to copy the object */
+    //       doConnect = true;
+    //       doScan = true;
 
-//     } // Found our server
+    //     } // Found our server
 
     if (strcmp(advertisedDevice->getName().c_str(), "BBC micro:bit [tegat]") == 0)
     {
@@ -122,18 +142,21 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
       /*******************************************************************
       myDevice = new BLEAdvertisedDevice(advertisedDevice);
 *******************************************************************/
-      myDevice[2] = advertisedDevice; /** Just save the reference now, no need to copy the object */
+      myDevice = advertisedDevice; /** Just save the reference now, no need to copy the object */
       doConnect = true;
       doScan = true;
 
+      // String msg = "Found BBC micro:bit [tegat]";
+      sendMessage("Found BBC micro:bit [tegat]");
     } // Found our server
 
-
-  }   // onResult
-};    // MyAdvertisedDeviceCallbacks
+  } // onResult
+};  // MyAdvertisedDeviceCallbacks
 
 void setupBLE()
 {
+  sendMessage("Starting BLE...");
+
   Serial.println("Starting BLE...");
   BLEDevice::init("");
 
@@ -184,7 +207,7 @@ void sendBLE()
     // Serial.println();
 
     // Send drive command.;
-    pRemoteCharacteristic[1]->writeValue(byteCmd, sizeof(byteCmd), false);
+    pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false);
   }
   // else
   // {
@@ -206,10 +229,14 @@ void loopBLE()
     if (connectToServer())
     {
       Serial.println("We are now connected to the BLE Server.");
+
+      sendMessage("We are now connected to the BLE Server.");
     }
     else
     {
       Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+
+      sendMessage("We have failed to connect to the server; there is nothin more we will do.");
     }
     doConnect = false;
   }
@@ -219,6 +246,8 @@ void loopBLE()
   {
     Serial.println("Restart scan - loopBLE");
     BLEDevice::getScan()->start(0);
+
+    sendMessage("Restart scan - loopBLE");
   }
   else
   {

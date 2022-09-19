@@ -1,13 +1,12 @@
-
 #include <Arduino.h>
 #include "MQTTworker.h"
-
-WiFiClient espClient;
-PubSubClient client(espClient);
 
 const char *ssid = "the robot network";
 const char *password = "isaacasimov";
 const char *mqtt_server = "robotmqtt";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 void setup_wifi()
 {
@@ -49,19 +48,19 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   auto value = atof(message.c_str());
 
-  if (strcmp(topic, "/SBrick/adalovelace/motor/1") == 0)
+  if (strcmp(topic, "/SBrick/adalovelace/motor/A") == 0)
   {
     motorAspeed = (uint8_t)value;
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/2") == 0)
+  else if (strcmp(topic, "/SBrick/adalovelace/motor/B") == 0)
   {
     motorBspeed = (uint8_t)value;
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/3") == 0)
+  else if (strcmp(topic, "/SBrick/adalovelace/motor/C") == 0)
   {
     motorCspeed = (uint8_t)value;
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/4") == 0)
+  else if (strcmp(topic, "/SBrick/adalovelace/motor/D") == 0)
   {
     motorDspeed = (uint8_t)value;
   }
@@ -89,9 +88,9 @@ void reconnect()
     {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("/SBrick/adalovelace/", "hello world");
+      client.publish("/SBrick/adalovelace/", "connected");
       // ... and resubscribe
-        client.subscribe("/SBrick/#");
+      client.subscribe("/SBrick/#");
     }
     else
     {
@@ -117,14 +116,9 @@ void loopMQTT()
     reconnect();
   }
   client.loop();
+}
 
-  // unsigned long now = millis();
-  // if (now - lastMsg > 2000) {
-  //   lastMsg = now;
-  //   ++value;
-  //   snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-  //   Serial.print("Publish message: ");
-  //   Serial.println(msg);
-  //   client.publish("outTopic", msg);
-  // }
+void sendMessage(String payload)
+{
+  client.publish("/SBrick/adalovelace/", payload.c_str());
 }

@@ -120,5 +120,10 @@ void loopMQTT()
 
 void sendMessage(String payload)
 {
-  client.publish("/SBrick/adalovelace/", payload.c_str());
+  Serial.println(payload.c_str());
+
+  if (client.connected())
+  {
+    client.publish("/SBrick/adalovelace/", payload.c_str());
+  }
 }

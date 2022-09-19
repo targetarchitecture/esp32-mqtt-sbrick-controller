@@ -13,6 +13,10 @@ static boolean doScan = false;
 static BLERemoteCharacteristic *pRemoteCharacteristic[6];
 static BLEAdvertisedDevice *myDevice[6];
 
+
+static std::vector<BLEAdvertisedDevice> *myDevices = {};
+static std::vector<BLERemoteCharacteristic> *pRemoteCharacteristics = {};
+
 extern uint8_t motorAdrivingForward;
 extern uint8_t motorBdrivingForward;
 extern uint8_t motorCdrivingForward;

@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "BLEworker.h"
 
+String lastCommand = "";
+
 // void notifyCallback(
 //     BLERemoteCharacteristic *pBLERemoteCharacteristic,
 //     uint8_t *pData,
@@ -24,7 +26,7 @@ class MyClientCallback : public BLEClientCallbacks
 
   void onDisconnect(BLEClient *pclient)
   {
-     connected = false;
+    connected = false;
 
     sendMessage("BLE Disconnected");
   }
@@ -118,7 +120,7 @@ void setupBLE()
 {
   sendMessage("Starting BLE...");
 
-  BLEDevice::init("");
+  BLEDevice::init("ESP32 SBrick Controller");
 
   // Retrieve a Scanner and set the callback we want to use to be informed when we
   // have detected a new device.  Specify that we want active scanning and start the
@@ -142,19 +144,54 @@ void sendBLE()
         1,
         1,
         true,
-        motorAspeed,
+        std::abs(motorAspeed.toInt()),
         2,
         true,
-        motorBspeed,
+        std::abs(motorBspeed.toInt()),
         3,
         true,
-        motorCspeed,
+        std::abs(motorCspeed.toInt()),
         4,
         true,
-        motorDspeed};
+        std::abs(motorDspeed.toInt())};
+
+    if (motorAspeed.toInt() < 0)
+    {
+      byteCmd[2] = false;
+    }
+    if (motorBspeed.toInt() < 0)
+    {
+      byteCmd[5] = false;
+    }
+    if (motorCspeed.toInt() < 0)
+    {
+      byteCmd[8] = false;
+    }
+    if (motorDspeed.toInt() < 0)
+    {
+      byteCmd[11] = false;
+    }
 
     // Send drive command.;
     pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false);
+
+    String msg = "";
+    for (size_t i = 0; i < 13; i++)
+    {
+      msg = msg + std::to_string(byteCmd[i]).c_str();
+
+      if (i < 12)
+      {
+        msg = msg + ".";
+      }
+    }
+
+    if (strcmp(msg.c_str(), lastCommand.c_str()) != 0)
+    {
+      sendMessage("/sbrick/adalovelace/command", msg);
+    }
+
+    lastCommand = msg.c_str();
   }
 }
 

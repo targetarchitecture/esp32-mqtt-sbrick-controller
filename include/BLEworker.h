@@ -15,15 +15,10 @@ static boolean doScan = false;
 static BLERemoteCharacteristic *pRemoteCharacteristic;
 static BLEAdvertisedDevice *myDevice;
 
-extern uint8_t motorAdrivingForward;
-extern uint8_t motorBdrivingForward;
-extern uint8_t motorCdrivingForward;
-extern uint8_t motorDdrivingForward;
-
-extern uint8_t motorAspeed;
-extern uint8_t motorBspeed;
-extern uint8_t motorCspeed;
-extern uint8_t motorDspeed;
+extern String motorAspeed;
+extern String motorBspeed;
+extern String motorCspeed;
+extern String motorDspeed;
 
 void loopBLE();
 void sendBLE();
@@ -31,3 +26,4 @@ void setupBLE();
 bool connectToServer();
 
 extern void sendMessage(String payload);
+extern void sendMessage(String topic, String payload);

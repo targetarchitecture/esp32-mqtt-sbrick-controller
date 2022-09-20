@@ -30,6 +30,8 @@ void setup_wifi()
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  mdns_init(); // Add
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -46,30 +48,46 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   Serial.println(message.c_str());
 
-  auto value = atof(message.c_str());
+  // auto value = atof(message.c_str());
 
-  if (strcmp(topic, "/SBrick/adalovelace/motor/A") == 0)
+  if (strcmp(topic, "/sbrick/adalovelace/motor/a") == 0)
   {
-    motorAspeed = (uint8_t)value;
+    motorAspeed = message.c_str();
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/B") == 0)
+  else if (strcmp(topic, "/SBrick/adalovelace/motor/b") == 0)
   {
-    motorBspeed = (uint8_t)value;
+    motorBspeed = message.c_str();
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/C") == 0)
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/c") == 0)
   {
-    motorCspeed = (uint8_t)value;
+    motorCspeed = message.c_str();
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/D") == 0)
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/d") == 0)
   {
-    motorDspeed = (uint8_t)value;
+    motorDspeed = message.c_str();
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/stop") == 0)
+  if (strcmp(topic, "/sbrick/adalovelace/motor/1") == 0)
   {
-    motorAspeed = 0;
-    motorBspeed = 0;
-    motorCspeed = 0;
-    motorDspeed = 0;
+    motorAspeed = message.c_str();
+  }
+  else if (strcmp(topic, "/SBrick/adalovelace/motor/2") == 0)
+  {
+    motorBspeed = message.c_str();
+  }
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/3") == 0)
+  {
+    motorCspeed = message.c_str();
+  }
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/4") == 0)
+  {
+    motorDspeed = message.c_str();
+  }
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/stop") == 0)
+  {
+    motorAspeed = "0";
+    motorBspeed = "0";
+    motorCspeed = "0";
+    motorDspeed = "0";
   }
 }
 
@@ -88,9 +106,9 @@ void reconnect()
     {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("/SBrick/adalovelace/", "connected");
+      client.publish("/sbrick/adalovelace/", "connected");
       // ... and resubscribe
-      client.subscribe("/SBrick/#");
+      client.subscribe("/sbrick/adalovelace/motor/#");
     }
     else
     {
@@ -105,7 +123,9 @@ void reconnect()
 
 void setupMQTT()
 {
-  client.setServer(mqtt_server, 1883);
+  IPAddress ipaddr = MDNS.queryHost(mqtt_server, 5000 /* ms */);
+
+  client.setServer(ipaddr, 1883);
   client.setCallback(callback);
 }
 
@@ -124,6 +144,16 @@ void sendMessage(String payload)
 
   if (client.connected())
   {
-    client.publish("/SBrick/adalovelace/", payload.c_str());
+    client.publish("/sbrick/adalovelace/", payload.c_str());
+  }
+}
+
+void sendMessage(String topic, String payload)
+{
+  Serial.println(payload.c_str());
+
+  if (client.connected())
+  {
+    client.publish(topic.c_str(), payload.c_str());
   }
 }

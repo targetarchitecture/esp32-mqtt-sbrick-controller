@@ -3,13 +3,9 @@
 #include <PubSubClient.h>
 #include <NimBLEDevice.h>
 
-uint8_t motorAdrivingForward = 1;
-uint8_t motorBdrivingForward = 1;
-uint8_t motorCdrivingForward = 1;
-uint8_t motorDdrivingForward = 1;
+String motorAspeed = "0";
+String motorBspeed = "0";
+String motorCspeed = "0";
+String motorDspeed = "0";
 
-uint8_t motorAspeed = 0;
-uint8_t motorBspeed = 0;
-uint8_t motorCspeed = 0;
-uint8_t motorDspeed = 0;
-
+extern void sendMessage(String topic, String payload);

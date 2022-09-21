@@ -8,4 +8,8 @@ String motorBspeed = "0";
 String motorCspeed = "0";
 String motorDspeed = "0";
 
+unsigned long time_now = 0;
+
 extern void sendMessage(String topic, String payload);
+
+void loopStats();

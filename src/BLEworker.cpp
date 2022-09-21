@@ -1,22 +1,6 @@
 #include <Arduino.h>
 #include "BLEworker.h"
 
-String lastCommand = "";
-
-// void notifyCallback(
-//     BLERemoteCharacteristic *pBLERemoteCharacteristic,
-//     uint8_t *pData,
-//     size_t length,
-//     bool isNotify)
-// {
-//   Serial.print("Notify callback for characteristic ");
-//   Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
-//   Serial.print(" of data length ");
-//   Serial.println(length);
-//   Serial.print("data: ");
-//   Serial.println((char *)pData);
-// }
-
 class MyClientCallback : public BLEClientCallbacks
 {
   void onConnect(BLEClient *pclient)
@@ -141,57 +125,58 @@ void sendBLE()
   {
     // Construct drive command.
     uint8_t byteCmd[13] = {
-        1,
-        1,
-        true,
-        std::abs(motorAspeed.toInt()),
-        2,
-        true,
-        std::abs(motorBspeed.toInt()),
-        3,
-        true,
-        std::abs(motorCspeed.toInt()),
-        4,
-        true,
-        std::abs(motorDspeed.toInt())};
+        1,                                      // 0
+        0,                                      // 1
+        (uint8_t) true,                         // 2
+        (uint8_t)std::abs(motorAspeed.toInt()), // 3
+        1,                                      // 4
+        (uint8_t) true,                         // 5
+        (uint8_t)std::abs(motorBspeed.toInt()), // 6
+        2,                                      // 7
+        (uint8_t) true,                         // 8
+        (uint8_t)std::abs(motorCspeed.toInt()), // 9
+        3,                                      // 10
+        (uint8_t) true,                         // 11
+        (uint8_t)std::abs(motorDspeed.toInt())  // 12
+    };
 
     if (motorAspeed.toInt() < 0)
     {
-      byteCmd[2] = false;
+      byteCmd[2] = (uint8_t) false;
     }
     if (motorBspeed.toInt() < 0)
     {
-      byteCmd[5] = false;
+      byteCmd[5] = (uint8_t) false;
     }
     if (motorCspeed.toInt() < 0)
     {
-      byteCmd[8] = false;
+      byteCmd[8] = (uint8_t) false;
     }
     if (motorDspeed.toInt() < 0)
     {
-      byteCmd[11] = false;
+      byteCmd[11] = (uint8_t) false;
     }
 
     // Send drive command.;
-    pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false);
-
-    String msg = "";
-    for (size_t i = 0; i < 13; i++)
+    if (pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false) == false)
     {
-      msg = msg + std::to_string(byteCmd[i]).c_str();
-
-      if (i < 12)
-      {
-        msg = msg + ".";
-      }
+      Serial.println("Send drive command failed.");
     }
 
-    if (strcmp(msg.c_str(), lastCommand.c_str()) != 0)
-    {
-      sendMessage("/sbrick/adalovelace/command", msg);
-    }
-
-    lastCommand = msg.c_str();
+    // String msg = "";
+    // for (size_t i = 0; i < 13; i++)
+    // {
+    //   msg = msg + std::to_string(byteCmd[i]).c_str();
+    //   if (i < 12)
+    //   {
+    //     msg = msg + ".";
+    //   }
+    // }
+    // if (strcmp(msg.c_str(), lastCommand.c_str()) != 0)
+    // {
+    //   sendMessage("/sbrick/adalovelace/command", msg);
+    // }
+    //lastCommand = msg.c_str();
   }
 }
 

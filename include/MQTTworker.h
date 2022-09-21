@@ -2,11 +2,9 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
-  #include<ESPmDNS.h>
+#include <ESPmDNS.h>
 
-
-
-void setup_wifi();
+void setupWiFi();
 void setupMQTT();
 void loopMQTT();
 void callback(char *topic, byte *payload, unsigned int length);

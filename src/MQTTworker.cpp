@@ -8,7 +8,7 @@ const char *mqtt_server = "robotmqtt";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void setup_wifi()
+void setupWiFi()
 {
   // We start by connecting to a WiFi network
   Serial.println();
@@ -54,7 +54,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   {
     motorAspeed = message.c_str();
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/b") == 0)
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/b") == 0)
   {
     motorBspeed = message.c_str();
   }
@@ -66,11 +66,11 @@ void callback(char *topic, byte *payload, unsigned int length)
   {
     motorDspeed = message.c_str();
   }
-  if (strcmp(topic, "/sbrick/adalovelace/motor/1") == 0)
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/1") == 0)
   {
     motorAspeed = message.c_str();
   }
-  else if (strcmp(topic, "/SBrick/adalovelace/motor/2") == 0)
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/2") == 0)
   {
     motorBspeed = message.c_str();
   }
@@ -89,6 +89,25 @@ void callback(char *topic, byte *payload, unsigned int length)
     motorCspeed = "0";
     motorDspeed = "0";
   }
+  else if (strcmp(topic, "/sbrick/adalovelace/motor/all") == 0)
+  {
+    motorAspeed = message.c_str();
+    motorBspeed = message.c_str();
+    motorCspeed = message.c_str();
+    motorDspeed = message.c_str();
+  }
+
+  // Serial.print("motorAspeed:");
+  // Serial.println(motorAspeed);
+
+  // Serial.print("motorBspeed:");
+  // Serial.println(motorBspeed);
+
+  // Serial.print("motorCspeed:");
+  // Serial.println(motorCspeed);
+
+  // Serial.print("motorDspeed:");
+  // Serial.println(motorDspeed);
 }
 
 void reconnect()

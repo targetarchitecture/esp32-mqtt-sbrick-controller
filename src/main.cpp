@@ -5,8 +5,6 @@
 #include "Shared.h"
 #include "MQTTworker.h"
 #include "BLEworker.h"
-// #include <time.h>
-// #include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -19,15 +17,13 @@ extern "C"
 }
 #endif
 
-unsigned long time_now = 0;
-
 void setup()
 {
   Serial.begin(115200);
 
   delay(10);
 
-  setup_wifi();
+  setupWiFi();
   setupMQTT();
   setupBLE();
 }
@@ -36,7 +32,13 @@ void loop()
 {
   loopBLE();
   loopMQTT();
+  loopStats();
 
+  delay(50); // Delay to keep processor happy?
+}
+
+void loopStats()
+{
   if (millis() - time_now > 10000)
   {
     time_now = millis();
@@ -49,6 +51,4 @@ void loop()
     sendMessage("/sbrick/adalovelace/stats/temp", std::to_string(temp_celsius).c_str());
     sendMessage("/sbrick/adalovelace/stats/ip", WiFi.localIP().toString().c_str());
   }
-
-  delay(50); // Delay to keep processor happy?
 }

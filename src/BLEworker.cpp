@@ -47,32 +47,86 @@ bool connectToServer()
   sendMessage("Found our service");
 
   // Obtain a reference to the characteristic in the service of the remote BLE server.
-  pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
-  if (pRemoteCharacteristic == nullptr)
+  pRemoteCharacteristicCommand = pRemoteService->getCharacteristic(CommandUUID);
+
+  if (pRemoteCharacteristicCommand == nullptr)
   {
-    msg = "Failed to find our characteristic UUID: ";
-    msg.concat(charUUID.toString().c_str());
+    msg = "Failed to find our command characteristic UUID: ";
+    msg.concat(CommandUUID.toString().c_str());
     sendMessage(msg);
 
     pClient->disconnect();
     return false;
   }
+  else
+  {
+    Serial.println("Send voltage command.");
 
-  sendMessage("Found our characteristic");
+    std::vector<uint8_t> vec;
+    vec.push_back(0x2C);
+    vec.push_back(0x00);
+    vec.push_back(0x01);
+    vec.push_back(0x02);
+    vec.push_back(0x03);
+    vec.push_back(0x04);
+    vec.push_back(0x05);
+    vec.push_back(0x06);
+    vec.push_back(0x07);
 
-  // Read the value of the characteristic.
-  // if (pRemoteCharacteristic->canRead())
-  // {
-  //   std::string value = pRemoteCharacteristic->readValue();
-  //   Serial.print("The characteristic value was: ");
-  //   Serial.println(value.c_str());
-  // }
+    if (pRemoteCharacteristicCommand->writeValue(vec, false) == false)
+    {
+      Serial.println("Send voltage command failed.");
+    }
 
-  // if (pRemoteCharacteristic->canNotify())
-  //   pRemoteCharacteristic->subscribe(true, notifyCallback);
+    Serial.println("Send voltage notification command.");
+
+    vec.clear();
+    vec.push_back(0x2E);
+    vec.push_back(0x00);
+    vec.push_back(0x01);
+    vec.push_back(0x02);
+    vec.push_back(0x03);
+    vec.push_back(0x04);
+    vec.push_back(0x05);
+    vec.push_back(0x06);
+    vec.push_back(0x07);
+
+    if (pRemoteCharacteristicCommand->writeValue(vec, false) == false)
+    {
+      Serial.println("Send voltage notification command failed.");
+    }
+  }
+
+  sendMessage("Found our notification characteristic");
+
+  if (pRemoteCharacteristicCommand->canNotify())
+  {
+    Serial.println("subscribing");
+    if (pRemoteCharacteristicCommand->subscribe(true, NotifyCallback) == false)
+    {
+      Serial.println("subscribe failed");
+    }
+    else
+    {
+      Serial.println("subscribed");
+    }
+  }
 
   connected = true;
   return true;
+}
+
+void NotifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify)
+{
+Serial.print("NimBLERemoteCharacteristic ");
+
+String message = "";
+for (unsigned int i = 0; i < length; i++)
+{
+  message = message + (char)pData[i];
+}
+
+Serial.println(message.c_str());
 }
 
 /**
@@ -158,7 +212,7 @@ void sendBLE()
     }
 
     // Send drive command.;
-    if (pRemoteCharacteristic->writeValue(byteCmd, sizeof(byteCmd), false) == false)
+    if (pRemoteCharacteristicCommand->writeValue(byteCmd, sizeof(byteCmd), false) == false)
     {
       Serial.println("Send drive command failed.");
     }
@@ -176,7 +230,7 @@ void sendBLE()
     // {
     //   sendMessage("/sbrick/adalovelace/command", msg);
     // }
-    //lastCommand = msg.c_str();
+    // lastCommand = msg.c_str();
   }
 }
 

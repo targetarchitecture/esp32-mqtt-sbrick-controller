@@ -7,12 +7,16 @@
 static BLEUUID serviceUUID("4dc591b0-857c-41de-b5f1-15abda665b0c");
 
 // The characteristic of the remote service we are interested in.
-static BLEUUID charUUID("02b8cbcc-0e25-4bda-8790-a15f53e6010f");
+static BLEUUID CommandUUID("02b8cbcc-0e25-4bda-8790-a15f53e6010f");
+
+// The characteristic of the remote service we are interested in.
+//static BLEUUID NotificationUUID("489a6ae0-c1ab-4c9c-bdb2-11d373c1b7fb");
 
 static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
-static BLERemoteCharacteristic *pRemoteCharacteristic;
+static BLERemoteCharacteristic *pRemoteCharacteristicCommand;
+//static BLERemoteCharacteristic *pRemoteCharacteristicNotification;
 static BLEAdvertisedDevice *myDevice;
 
 extern String motorAspeed;
@@ -24,6 +28,7 @@ void loopBLE();
 void sendBLE();
 void setupBLE();
 bool connectToServer();
+void NotifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify);
 
 extern void sendMessage(String payload);
 extern void sendMessage(String topic, String payload);

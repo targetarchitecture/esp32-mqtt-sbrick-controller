@@ -58,75 +58,9 @@ bool connectToServer()
     pClient->disconnect();
     return false;
   }
-  else
-  {
-    Serial.println("Send voltage command.");
-
-    std::vector<uint8_t> vec;
-    vec.push_back(0x2C);
-    vec.push_back(0x00);
-    vec.push_back(0x01);
-    vec.push_back(0x02);
-    vec.push_back(0x03);
-    vec.push_back(0x04);
-    vec.push_back(0x05);
-    vec.push_back(0x06);
-    vec.push_back(0x07);
-
-    if (pRemoteCharacteristicCommand->writeValue(vec, false) == false)
-    {
-      Serial.println("Send voltage command failed.");
-    }
-
-    Serial.println("Send voltage notification command.");
-
-    vec.clear();
-    vec.push_back(0x2E);
-    vec.push_back(0x00);
-    vec.push_back(0x01);
-    vec.push_back(0x02);
-    vec.push_back(0x03);
-    vec.push_back(0x04);
-    vec.push_back(0x05);
-    vec.push_back(0x06);
-    vec.push_back(0x07);
-
-    if (pRemoteCharacteristicCommand->writeValue(vec, false) == false)
-    {
-      Serial.println("Send voltage notification command failed.");
-    }
-  }
-
-  sendMessage("Found our notification characteristic");
-
-  if (pRemoteCharacteristicCommand->canNotify())
-  {
-    Serial.println("subscribing");
-    if (pRemoteCharacteristicCommand->subscribe(true, NotifyCallback) == false)
-    {
-      Serial.println("subscribe failed");
-    }
-    else
-    {
-      Serial.println("subscribed");
-    }
-  }
 
   connected = true;
   return true;
-}
-
-void NotifyCallback(NimBLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify)
-{
-Serial.print("NimBLERemoteCharacteristic ");
-
-String message = "";
-for (unsigned int i = 0; i < length; i++)
-{
-  message = message + (char)pData[i];
-}
-
-Serial.println(message.c_str());
 }
 
 /**

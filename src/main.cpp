@@ -46,9 +46,9 @@ void loopStats()
     auto temp_farenheit = temprature_sens_read();
     int temp_celsius = trunc((temp_farenheit - 32) / 1.8);
 
-    sendMessage("/sbrick/adalovelace/stats/millis", std::to_string(time_now).c_str());
-    sendMessage("/sbrick/adalovelace/stats/freeheap", std::to_string(ESP.getFreeHeap()).c_str());
-    sendMessage("/sbrick/adalovelace/stats/temp", std::to_string(temp_celsius).c_str());
-    sendMessage("/sbrick/adalovelace/stats/ip", WiFi.localIP().toString().c_str());
+    sendMessage("lego/sbrick/adalovelace/stats/millis", std::to_string(time_now).c_str());
+    sendMessage("lego/sbrick/adalovelace/stats/freeheap", std::to_string(ESP.getFreeHeap()).c_str());
+    sendMessage("lego/sbrick/adalovelace/stats/temp", std::to_string(temp_celsius).c_str());
+    sendMessage("lego/sbrick/adalovelace/stats/ip", WiFi.localIP().toString().c_str());
   }
 }

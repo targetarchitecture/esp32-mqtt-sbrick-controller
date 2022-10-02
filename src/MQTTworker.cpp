@@ -50,46 +50,46 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   // auto value = atof(message.c_str());
 
-  if (strcmp(topic, "/sbrick/adalovelace/motor/a") == 0)
+  if (strcmp(topic, "lego/sbrick/adalovelace/a/motor") == 0)
   {
     motorAspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/b") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/b/motor") == 0)
   {
     motorBspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/c") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/c/motor") == 0)
   {
     motorCspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/d") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/d/motor") == 0)
   {
     motorDspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/1") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/1/motor") == 0)
   {
     motorAspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/2") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/2/motor") == 0)
   {
     motorBspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/3") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/3/motor") == 0)
   {
     motorCspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/4") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/4/motor") == 0)
   {
     motorDspeed = message.c_str();
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/stop") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/all/stop") == 0)
   {
     motorAspeed = "0";
     motorBspeed = "0";
     motorCspeed = "0";
     motorDspeed = "0";
   }
-  else if (strcmp(topic, "/sbrick/adalovelace/motor/all") == 0)
+  else if (strcmp(topic, "lego/sbrick/adalovelace/all/motor") == 0)
   {
     motorAspeed = message.c_str();
     motorBspeed = message.c_str();
@@ -125,9 +125,17 @@ void reconnect()
     {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("/sbrick/adalovelace/", "connected");
+      client.publish("lego/sbrick/adalovelace/", "connected");
       // ... and resubscribe
-      client.subscribe("/sbrick/adalovelace/motor/#");
+      client.subscribe("lego/sbrick/adalovelace/a/#");
+      client.subscribe("lego/sbrick/adalovelace/b/#");
+      client.subscribe("lego/sbrick/adalovelace/c/#");
+      client.subscribe("lego/sbrick/adalovelace/d/#");
+      client.subscribe("lego/sbrick/adalovelace/1/#");
+      client.subscribe("lego/sbrick/adalovelace/2/#");
+      client.subscribe("lego/sbrick/adalovelace/3/#");
+      client.subscribe("lego/sbrick/adalovelace/4/#");
+      client.subscribe("lego/sbrick/adalovelace/all/#");
     }
     else
     {
@@ -163,7 +171,7 @@ void sendMessage(String payload)
 
   if (client.connected())
   {
-    client.publish("/sbrick/adalovelace/", payload.c_str());
+    client.publish("lego/sbrick/adalovelace/", payload.c_str());
   }
 }
 
